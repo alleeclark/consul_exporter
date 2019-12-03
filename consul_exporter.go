@@ -299,7 +299,6 @@ func (e *Exporter) collectHealthStateMetric(ch chan<- prometheus.Metric) bool {
 	}
 	for _, hc := range checks {
 		var passing, warning, critical, maintenance float64
-
 		switch hc.Status {
 		case consul_api.HealthPassing:
 			passing = 1
@@ -310,7 +309,9 @@ func (e *Exporter) collectHealthStateMetric(ch chan<- prometheus.Metric) bool {
 		case consul_api.HealthMaint:
 			maintenance = 1
 		}
-
+		if hc.CheckID == "_node_maintenance" || hc.ServiceID == fmt.Sprintf("_service_maintenance:%s", hc.ServiceName) {
+			maintenance = 1
+		}
 		if hc.ServiceID == "" {
 			ch <- prometheus.MustNewConstMetric(
 				nodeChecks, prometheus.GaugeValue, passing, hc.CheckID, hc.Node, consul_api.HealthPassing,
